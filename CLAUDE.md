@@ -34,14 +34,35 @@ claude-safe-ops/                              ~/.claude-safe-ops/
 - Config loading priority: user custom (`~/.claude-safe-ops/config/`) > project defaults (`src/config/`)
 - `install.sh` initializes the `~/.claude-safe-ops/` directory and copies config templates
 
+## SSH Connection Optimization (Claude Code Mode)
+
+In Claude Code mode, commands are executed via Bash `ssh` calls. To avoid reconnecting on every command, the project uses **SSH ControlMaster** for OS-level connection multiplexing:
+
+```
+# ~/.ssh/config (added by install.sh)
+Host *
+    ControlMaster auto
+    ControlPath ~/.ssh/sockets/%r@%h-%p
+    ControlPersist 600
+```
+
+**How it works**:
+- First `ssh` call establishes a master connection and creates a Unix socket in `~/.ssh/sockets/`
+- Subsequent `ssh` calls to the same host reuse the master connection (no re-authentication)
+- `ControlPersist 600` keeps the master alive for 10 minutes after the last session ends
+- This replaces the Python-level connection pool (`SSHConnectionManager`) which only works in CLI mode
+
+**Claude Code should use SSH config aliases** (e.g., `ssh twms 'command'`) instead of full `ssh -i key user@host` to benefit from ControlMaster. Host aliases are defined in `~/.ssh/config` and should match entries in `~/.claude-safe-ops/config/hosts.yaml`.
+
 ## Onboarding (First-time Setup Guide)
 
 When a user launches Claude Code in this project directory, check the following conditions to guide setup:
 
 1. **`~/.claude-safe-ops/` does not exist** -> suggest running `./install.sh`
 2. **`~/.claude-safe-ops/config/hosts.yaml` still has template defaults** -> guide user to add real servers
-3. **SSH connectivity** -> help user test `ssh -o ConnectTimeout=5 -o BatchMode=yes user@host 'echo ok'`
-4. **Everything ready** -> start accepting ops commands directly
+3. **SSH ControlMaster** -> verify `~/.ssh/sockets/` exists and `ControlMaster auto` is in `~/.ssh/config`
+4. **SSH connectivity** -> help user test `ssh -o ConnectTimeout=5 -o BatchMode=yes user@host 'echo ok'`
+5. **Everything ready** -> start accepting ops commands directly
 
 ## Architecture
 

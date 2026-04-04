@@ -27,7 +27,7 @@ if [ -z "$COMMAND" ]; then
 fi
 
 # ── Quick check: contains remote operation? ──
-if ! echo "$COMMAND" | grep -qiE 'ssh |scp |rsync |ansible |ansible-playbook '; then
+if ! echo "$COMMAND" | grep -qiE '^\s*(ssh|scp|rsync|ansible|ansible-playbook)\s'; then
     exit 0
 fi
 
