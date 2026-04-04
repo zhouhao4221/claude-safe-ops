@@ -42,7 +42,9 @@ Engine:   🔴 CRITICAL — blocked. Requires approval workflow.
 
 | Layer | Mechanism | What It Stops |
 |-------|-----------|---------------|
+| **Hook: sensitive-input-guard** | UserPromptSubmit | Passwords/tokens/keys typed in chat (blocked before reaching AI) |
 | **Rule engine** | 115 regex rules (CRITICAL/HIGH/MEDIUM/LOW) | `rm -rf /`, `DROP DATABASE`, `shutdown`, `kill -9` |
+| **Hook: sensitive-input-guard** | UserPromptSubmit | Blocks passwords/tokens/keys in chat messages before they reach the AI |
 | **Hook: risk-check** | PreToolUse on Bash | SSH/scp/rsync/ansible commands assessed before execution |
 | **Hook: guard-files** | PreToolUse on Write/Edit/Read/Glob | Tampering with hook config, reading credentials/SSH keys |
 | **Hook: validate-hooks** | PreToolUse on Bash (first call) | Detects if safety hooks have been removed or misconfigured |
@@ -83,6 +85,7 @@ Claude Code (AI constructs commands)
 ┌─────────────────────────────────────────────────────────┐
 │  Hook Layer (.claude/settings.json)                     │
 │                                                         │
+│  0. sensitive-input-guard.sh — block secrets in chat     │
 │  1. validate-hooks.sh  — verify safety integrity        │
 │  2. risk-check.sh      — assess remote command risk     │
 │  3. guard-files.sh     — protect sensitive files        │
@@ -154,6 +157,44 @@ On first invocation each session:
 | No passwords in exceptions | `SSHConnectionError` strips credential info |
 | File permissions | `credentials.yaml` enforced at mode 600 |
 | Auth priority | Interactive input > env var > config file > SSH Agent |
+
+#### Chat Input Security
+
+> **NEVER type passwords, tokens, or keys directly in the Claude Code chat.**
+>
+> Everything you type in the chat is sent to the AI API. If you say "password is abc123", it will be transmitted in plaintext.
+
+**Safe ways to provide credentials:**
+
+| Method | Safe? | Why |
+|--------|-------|-----|
+| Config file (`~/.claude-safe-ops/config/credentials.yaml`) | ✅ | Protected by guard-files hook, AI cannot read without your approval |
+| SSH key authentication | ✅ | Private key never leaves your machine |
+| SSH Agent | ✅ | Key managed by system agent, invisible to AI |
+| `getpass()` interactive prompt | ✅ | Input not echoed to terminal, AI cannot see it |
+| **Typing password in chat** | ❌ | **Sent to AI API in plaintext** |
+| **`echo $PASSWORD` in commands** | ❌ | **Output visible to AI** |
+
+**What gets sent to the AI vs. what doesn't:**
+
+```
+┌─────────────────────────────────────────────────┐
+│  Sent to AI API (visible to model)              │
+│                                                 │
+│  • All chat messages you type                   │
+│  • Command stdout/stderr output                 │
+│  • File contents when AI reads files            │
+└─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│  NOT sent to AI (stays local)                   │
+│                                                 │
+│  • getpass() input (not echoed)                 │
+│  • SSH key passphrases (handled by ssh-agent)   │
+│  • Files blocked by guard-files.sh              │
+│  • credentials.yaml (SENSITIVE zone, read=ASK)  │
+└─────────────────────────────────────────────────┘
+```
 
 ### Audit Trail
 
