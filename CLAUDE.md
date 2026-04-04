@@ -87,10 +87,11 @@ Principle: **Better to over-block than to miss a threat.** Unmatched commands de
 
 ## Security Hooks (Defense in Depth)
 
-Four hooks registered in `.claude/settings.json` provide layered protection:
+Five hooks registered in `.claude/settings.json` provide layered protection:
 
 | Hook | Trigger | Purpose |
 |------|---------|---------|
+| `sensitive-input-guard.sh` | UserPromptSubmit | Block passwords/tokens/keys in chat messages before they reach the AI API |
 | `validate-hooks.sh` | PreToolUse (Bash) | Verify all hooks are registered + scripts exist + credentials permissions on first invocation |
 | `risk-check.sh` | PreToolUse (Bash) | Assess SSH/remote command risk (115 rules), block HIGH/CRITICAL |
 | `guard-files.sh` | PreToolUse (Write/Edit/Read/Glob) | Protect sensitive files from unauthorized access |

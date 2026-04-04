@@ -42,6 +42,7 @@ AI 执行：ssh db-01 'DROP DATABASE test'
 
 | 防御层 | 机制 | 拦截对象 |
 |--------|------|----------|
+| **Hook: sensitive-input-guard** | 用户消息发送前拦截 | 对话中输入的密码/Token/密钥（阻止发送到 AI） |
 | **规则引擎** | 115 条正则规则（CRITICAL/HIGH/MEDIUM/LOW） | `rm -rf /`、`DROP DATABASE`、`shutdown`、`kill -9` |
 | **Hook: risk-check** | Bash 工具调用前拦截 | SSH/scp/rsync/ansible 命令风险评估 |
 | **Hook: guard-files** | Write/Edit/Read/Glob 调用前拦截 | 篡改 hook 配置、读取凭据/SSH 密钥 |
@@ -83,6 +84,7 @@ Claude Code（AI 构造命令）
 ┌─────────────────────────────────────────────────────────┐
 │  Hook 层（.claude/settings.json）                        │
 │                                                         │
+│  0. sensitive-input-guard.sh — 拦截聊天中的密码/密钥      │
 │  1. validate-hooks.sh  — 验证安全组件完整性               │
 │  2. risk-check.sh      — 远程命令风险评估                 │
 │  3. guard-files.sh     — 保护敏感文件                     │
@@ -154,6 +156,44 @@ SSH → 远程服务器
 | 禁止异常泄露密码 | `SSHConnectionError` 剥离凭据信息 |
 | 文件权限管控 | `credentials.yaml` 强制 600 权限 |
 | 认证优先级 | 交互输入 > 环境变量 > 配置文件 > SSH Agent |
+
+#### 聊天输入安全
+
+> **绝对不要在 Claude Code 对话中直接输入密码、Token 或密钥。**
+>
+> 你在对话框中输入的所有内容都会发送到 AI API。如果你说"密码是 abc123"，它会以明文形式传输。
+
+**安全的凭据传递方式：**
+
+| 方式 | 安全？ | 原因 |
+|------|--------|------|
+| 配置文件（`~/.claude-safe-ops/config/credentials.yaml`） | ✅ | 受 guard-files hook 保护，AI 未经你同意无法读取 |
+| SSH 密钥认证 | ✅ | 私钥永远不离开你的机器 |
+| SSH Agent | ✅ | 密钥由系统代理管理，对 AI 不可见 |
+| `getpass()` 交互式输入 | ✅ | 输入不回显到终端，AI 无法看到 |
+| **在对话框输入密码** | ❌ | **以明文发送到 AI API** |
+| **`echo $PASSWORD` 命令** | ❌ | **输出对 AI 可见** |
+
+**什么会发送给 AI，什么不会：**
+
+```
+┌─────────────────────────────────────────────────┐
+│  发送到 AI API（模型可见）                        │
+│                                                 │
+│  • 你在对话框输入的所有消息                        │
+│  • 命令的 stdout/stderr 输出                     │
+│  • AI 读取文件时的文件内容                        │
+└─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│  不会发送（仅保留在本地）                          │
+│                                                 │
+│  • getpass() 输入（不回显）                       │
+│  • SSH 密钥密码（由 ssh-agent 处理）              │
+│  • 被 guard-files.sh 拦截的文件                   │
+│  • credentials.yaml（SENSITIVE 区，读取需确认）    │
+└─────────────────────────────────────────────────┘
+```
 
 ### 审计追踪
 

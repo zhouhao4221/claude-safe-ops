@@ -31,6 +31,7 @@ REQUIRED_SCRIPTS=(
     "scripts/audit-log.sh"
     "scripts/guard-files.sh"
     "scripts/validate-hooks.sh"
+    "scripts/sensitive-input-guard.sh"
 )
 for script in "${REQUIRED_SCRIPTS[@]}"; do
     FULL_PATH="${PROJECT_ROOT}/${script}"
@@ -47,6 +48,7 @@ if [ -f "$SETTINGS_FILE" ]; then
         "risk-check.sh"
         "audit-log.sh"
         "guard-files.sh"
+        "sensitive-input-guard.sh"
     )
     for hook in "${REQUIRED_HOOKS[@]}"; do
         if ! grep -q "$hook" "$SETTINGS_FILE" 2>/dev/null; then
