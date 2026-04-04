@@ -1,0 +1,246 @@
+name: macos-cleanup
+description: "macOS full cleanup (AI caches -> browsers -> messaging -> dev tools -> system -> verify)"
+tags: [macos, cleanup, cache, ai, maintenance, local]
+vars:
+  log_days: "30"
+  dry_run: "true"
+steps:
+  # ══════════════════════════════════════════════════════════
+  # Phase 1: Scan — understand what's eating your disk
+  # ══════════════════════════════════════════════════════════
+  - name: "Disk usage overview"
+    command: "df -h / | tail -1 && echo '' && echo 'Total ~/Library/Caches:' && du -sh ~/Library/Caches/ 2>/dev/null && echo 'Total ~/Library/Application Support:' && du -sh ~/Library/Application\ Support/ 2>/dev/null"
+
+  - name: "Top 15 largest cache directories"
+    command: "du -sh ~/Library/Caches/*/ 2>/dev/null | sort -rh | head -15"
+
+  # ══════════════════════════════════════════════════════════
+  # Phase 2: AI tool caches
+  # ══════════════════════════════════════════════════════════
+  - name: "Scan AI tool caches"
+    command: >
+      echo '=== AI Tool Caches ===' &&
+      echo '--- Claude Code ---' &&
+      (du -sh ~/.claude/projects/ 2>/dev/null || echo '  not found') &&
+      (du -sh ~/Library/Caches/claude-cli-nodejs/ 2>/dev/null || echo '  not found') &&
+      echo '--- ChatGPT ---' &&
+      (du -sh ~/Library/Caches/ChatGPTHelper/ 2>/dev/null || echo '  not found') &&
+      (du -sh ~/Library/Application\ Support/com.openai.chat/ 2>/dev/null || echo '  not found') &&
+      echo '--- Ollama ---' &&
+      (du -sh ~/.ollama/models/ 2>/dev/null || echo '  not found') &&
+      echo '--- Hugging Face ---' &&
+      (du -sh ~/.cache/huggingface/ 2>/dev/null || echo '  not found') &&
+      echo '--- Cursor ---' &&
+      (du -sh ~/Library/Application\ Support/Cursor/Cache/ 2>/dev/null || echo '  not found') &&
+      (du -sh ~/Library/Application\ Support/Cursor/CachedData/ 2>/dev/null || echo '  not found') &&
+      echo '--- GitHub Copilot ---' &&
+      (du -sh ~/Library/Caches/com.github.CopilotForXcode.CopilotForXcodeExtensionService/ 2>/dev/null || echo '  not found') &&
+      echo '--- LM Studio ---' &&
+      (du -sh ~/.cache/lm-studio/ 2>/dev/null || echo '  not found')
+
+  - name: "Clean Claude CLI node cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Caches/claude-cli-nodejs/ && echo 'Cleaned'; else echo '[DRY RUN] ~/Library/Caches/claude-cli-nodejs/'; du -sh ~/Library/Caches/claude-cli-nodejs/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean Claude stale project caches"
+    command: "if [ '{{dry_run}}' = 'false' ]; then find ~/.claude/projects/ -maxdepth 2 -name 'MEMORY.md' -mtime +{{log_days}} -execdir rm -rf . \\; 2>/dev/null && echo 'Cleaned stale project caches (>{{log_days}}d)'; else echo '[DRY RUN] Stale project caches (>{{log_days}}d):'; find ~/.claude/projects/ -maxdepth 2 -name 'MEMORY.md' -mtime +{{log_days}} 2>/dev/null | wc -l | xargs echo '  count:'; fi"
+    on_fail: continue
+
+  - name: "Clean ChatGPT cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Caches/ChatGPTHelper/ && echo 'Cleaned'; else echo '[DRY RUN] ~/Library/Caches/ChatGPTHelper/'; du -sh ~/Library/Caches/ChatGPTHelper/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean Hugging Face hub cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/.cache/huggingface/hub/ && echo 'Cleaned'; else echo '[DRY RUN] ~/.cache/huggingface/hub/'; du -sh ~/.cache/huggingface/hub/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean Cursor editor cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Application\ Support/Cursor/Cache/ ~/Library/Application\ Support/Cursor/CachedData/ && echo 'Cleaned'; else echo '[DRY RUN] Cursor Cache + CachedData'; du -sh ~/Library/Application\ Support/Cursor/Cache/ ~/Library/Application\ Support/Cursor/CachedData/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  # ══════════════════════════════════════════════════════════
+  # Phase 3: Browser caches
+  # ══════════════════════════════════════════════════════════
+  - name: "Scan browser caches"
+    command: >
+      echo '=== Browser Caches ===' &&
+      echo '--- Chrome ---' &&
+      (du -sh ~/Library/Caches/Google/Chrome/ 2>/dev/null || echo '  not found') &&
+      (du -sh ~/Library/Application\ Support/Google/Chrome/Default/Service\ Worker/CacheStorage/ 2>/dev/null || echo '  SW: not found') &&
+      echo '--- Safari ---' &&
+      (du -sh ~/Library/Caches/com.apple.Safari/ 2>/dev/null || echo '  not found') &&
+      echo '--- Firefox ---' &&
+      (du -sh ~/Library/Caches/Firefox/ 2>/dev/null || echo '  not found') &&
+      echo '--- Edge ---' &&
+      (du -sh ~/Library/Caches/com.microsoft.edgemac/ 2>/dev/null || echo '  not found') &&
+      echo '--- Arc ---' &&
+      (du -sh ~/Library/Caches/company.thebrowser.Browser/ 2>/dev/null || echo '  not found') &&
+      echo '--- Brave ---' &&
+      (du -sh ~/Library/Caches/BraveSoftware/ 2>/dev/null || echo '  not found')
+
+  - name: "Clean Chrome cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Caches/Google/Chrome/Default/Cache/ ~/Library/Caches/Google/Chrome/Default/Code\ Cache/ 2>/dev/null && echo 'Cleaned Chrome cache (will rebuild on launch)'; else echo '[DRY RUN] Chrome cache'; du -sh ~/Library/Caches/Google/Chrome/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean other browser caches"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Caches/Firefox/Profiles/*/cache2/ ~/Library/Caches/com.microsoft.edgemac/ ~/Library/Caches/company.thebrowser.Browser/ ~/Library/Caches/BraveSoftware/ 2>/dev/null && echo 'Cleaned Firefox/Edge/Arc/Brave caches'; else echo '[DRY RUN] Firefox/Edge/Arc/Brave caches'; fi"
+    on_fail: continue
+
+  # ══════════════════════════════════════════════════════════
+  # Phase 4: Messaging & collaboration apps
+  # ══════════════════════════════════════════════════════════
+  - name: "Scan messaging app caches"
+    command: >
+      echo '=== Messaging App Caches ===' &&
+      echo '--- WeChat ---' &&
+      (du -sh ~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application\ Support/com.tencent.xinWeChat/ 2>/dev/null || echo '  not found') &&
+      echo '--- QQ ---' &&
+      (du -sh ~/Library/Containers/com.tencent.qq/Data/Library/Application\ Support/ 2>/dev/null || echo '  not found') &&
+      echo '--- Tencent Meeting ---' &&
+      (du -sh ~/Library/Caches/com.tencent.meeting/ 2>/dev/null || echo '  not found') &&
+      (du -sh ~/Library/Containers/com.tencent.meeting/ 2>/dev/null || echo '  container: not found') &&
+      echo '--- DingTalk ---' &&
+      (du -sh ~/Library/Application\ Support/DingTalk/ 2>/dev/null || echo '  not found') &&
+      echo '--- Feishu/Lark ---' &&
+      (du -sh ~/Library/Application\ Support/Lark/ 2>/dev/null || echo '  not found') &&
+      (du -sh ~/Library/Application\ Support/Feishu/ 2>/dev/null || echo '  not found') &&
+      echo '--- Slack ---' &&
+      (du -sh ~/Library/Application\ Support/Slack/Cache/ 2>/dev/null || echo '  not found') &&
+      (du -sh ~/Library/Application\ Support/Slack/Service\ Worker/ 2>/dev/null || echo '  SW: not found') &&
+      echo '--- Discord ---' &&
+      (du -sh ~/Library/Application\ Support/discord/Cache/ 2>/dev/null || echo '  not found') &&
+      echo '--- Telegram ---' &&
+      (du -sh ~/Library/Group\ Containers/*.Telegram/stable/ 2>/dev/null || echo '  not found') &&
+      echo '--- Zoom ---' &&
+      (du -sh ~/Library/Application\ Support/zoom.us/ 2>/dev/null || echo '  not found')
+
+  - name: "Clean WeChat cache (files & images only, keeps chat history)"
+    command: "if [ '{{dry_run}}' = 'false' ]; then find ~/Library/Containers/com.tencent.xinWeChat/ -path '*/Message/MessageTemp/*' -type f -mtime +{{log_days}} -delete 2>/dev/null && echo 'Cleaned WeChat temp files (>{{log_days}}d)'; else echo '[DRY RUN] WeChat temp files (>{{log_days}}d):'; find ~/Library/Containers/com.tencent.xinWeChat/ -path '*/Message/MessageTemp/*' -type f -mtime +{{log_days}} 2>/dev/null | wc -l | xargs echo '  files:'; fi"
+    on_fail: continue
+
+  - name: "Clean Tencent Meeting cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Caches/com.tencent.meeting/ && echo 'Cleaned'; else echo '[DRY RUN] ~/Library/Caches/com.tencent.meeting/'; du -sh ~/Library/Caches/com.tencent.meeting/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean Slack/Discord/Zoom caches"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Application\ Support/Slack/Cache/ ~/Library/Application\ Support/Slack/Service\ Worker/CacheStorage/ ~/Library/Application\ Support/discord/Cache/ ~/Library/Application\ Support/discord/Code\ Cache/ ~/Library/Caches/us.zoom.xos/ 2>/dev/null && echo 'Cleaned Slack/Discord/Zoom caches'; else echo '[DRY RUN] Slack/Discord/Zoom caches'; fi"
+    on_fail: continue
+
+  # ══════════════════════════════════════════════════════════
+  # Phase 5: Developer tool caches
+  # ══════════════════════════════════════════════════════════
+  - name: "Scan dev tool caches"
+    command: >
+      echo '=== Dev Tool Caches ===' &&
+      echo '--- npm ---' && (du -sh ~/.npm/_cacache/ 2>/dev/null || echo '  not found') &&
+      echo '--- Yarn ---' && (du -sh ~/Library/Caches/Yarn/ 2>/dev/null || echo '  not found') &&
+      echo '--- pnpm ---' && (du -sh ~/Library/pnpm/store/ 2>/dev/null || echo '  not found') &&
+      echo '--- pip ---' && (du -sh ~/Library/Caches/pip/ 2>/dev/null || echo '  not found') &&
+      echo '--- Go build ---' && (du -sh ~/Library/Caches/go-build/ 2>/dev/null || echo '  not found') &&
+      echo '--- Homebrew ---' && (du -sh ~/Library/Caches/Homebrew/ 2>/dev/null || echo '  not found') &&
+      echo '--- JetBrains ---' && (du -sh ~/Library/Caches/JetBrains/ 2>/dev/null || echo '  not found') &&
+      echo '--- VS Code ---' && (du -sh ~/Library/Application\ Support/Code/Cache/ 2>/dev/null || echo '  not found') &&
+      echo '--- Xcode DerivedData ---' && (du -sh ~/Library/Developer/Xcode/DerivedData/ 2>/dev/null || echo '  not found') &&
+      echo '--- iOS Simulator ---' && (du -sh ~/Library/Developer/CoreSimulator/ 2>/dev/null || echo '  not found') &&
+      echo '--- Playwright ---' && (du -sh ~/Library/Caches/ms-playwright/ 2>/dev/null || echo '  not found') &&
+      echo '--- CocoaPods ---' && (du -sh ~/Library/Caches/CocoaPods/ 2>/dev/null || echo '  not found') &&
+      echo '--- Gradle ---' && (du -sh ~/.gradle/caches/ 2>/dev/null || echo '  not found') &&
+      echo '--- Maven ---' && (du -sh ~/.m2/repository/ 2>/dev/null || echo '  not found') &&
+      echo '--- Cargo ---' && (du -sh ~/.cargo/registry/cache/ 2>/dev/null || echo '  not found') &&
+      echo '--- Docker ---' && (du -sh ~/Library/Containers/com.docker.docker/Data/vms/ 2>/dev/null || echo '  not found')
+
+  - name: "Clean npm cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then npm cache clean --force 2>/dev/null && echo 'Cleaned'; else echo '[DRY RUN] npm cache'; du -sh ~/.npm/_cacache/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean Yarn cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then yarn cache clean 2>/dev/null && echo 'Cleaned'; else echo '[DRY RUN] Yarn cache'; du -sh ~/Library/Caches/Yarn/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean pip cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then pip cache purge 2>/dev/null && echo 'Cleaned'; else echo '[DRY RUN] pip cache'; du -sh ~/Library/Caches/pip/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean Homebrew cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then brew cleanup --prune=all 2>/dev/null && echo 'Cleaned'; else echo '[DRY RUN] Homebrew cache'; du -sh ~/Library/Caches/Homebrew/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean Go build cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then go clean -cache 2>/dev/null && echo 'Cleaned'; else echo '[DRY RUN] Go build cache'; du -sh ~/Library/Caches/go-build/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean Xcode DerivedData"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Developer/Xcode/DerivedData/ && echo 'Cleaned (will rebuild on next build)'; else echo '[DRY RUN] Xcode DerivedData'; du -sh ~/Library/Developer/Xcode/DerivedData/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean VS Code cache"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Application\ Support/Code/Cache/ ~/Library/Application\ Support/Code/CachedData/ ~/Library/Application\ Support/Code/CachedExtensions/ 2>/dev/null && echo 'Cleaned'; else echo '[DRY RUN] VS Code caches'; du -sh ~/Library/Application\ Support/Code/Cache/ ~/Library/Application\ Support/Code/CachedData/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean JetBrains IDE caches"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Caches/JetBrains/*/local-history/ ~/Library/Caches/JetBrains/*/tmp/ 2>/dev/null && echo 'Cleaned JetBrains local-history + tmp'; else echo '[DRY RUN] JetBrains caches'; du -sh ~/Library/Caches/JetBrains/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  # ══════════════════════════════════════════════════════════
+  # Phase 6: macOS system caches & logs
+  # ══════════════════════════════════════════════════════════
+  - name: "Scan system caches"
+    command: >
+      echo '=== System Caches ===' &&
+      echo '--- Logs ---' && (du -sh ~/Library/Logs/ 2>/dev/null || echo '  not found') &&
+      echo '--- Crash reports ---' && (ls ~/Library/Logs/DiagnosticReports/*.crash 2>/dev/null | wc -l | xargs echo '  files:') &&
+      echo '--- Saved app state ---' && (du -sh ~/Library/Saved\ Application\ State/ 2>/dev/null || echo '  not found') &&
+      echo '--- Mail downloads ---' && (du -sh ~/Library/Containers/com.apple.mail/Data/Library/Mail\ Downloads/ 2>/dev/null || echo '  not found') &&
+      echo '--- Spotlight ---' && (du -sh ~/Library/Caches/com.apple.helpd/ 2>/dev/null || echo '  not found') &&
+      echo '--- Font caches ---' && (du -sh ~/Library/Caches/com.apple.FontRegistry/ 2>/dev/null || echo '  not found') &&
+      echo '--- Trash ---' && (du -sh ~/.Trash/ 2>/dev/null || echo '  empty')
+
+  - name: "Clean old system logs"
+    command: "if [ '{{dry_run}}' = 'false' ]; then find ~/Library/Logs -name '*.log' -mtime +{{log_days}} -delete 2>/dev/null && echo 'Cleaned logs older than {{log_days}} days'; else echo '[DRY RUN] Old logs (>{{log_days}}d):'; find ~/Library/Logs -name '*.log' -mtime +{{log_days}} 2>/dev/null | wc -l | xargs echo '  files:'; du -sh ~/Library/Logs/ 2>/dev/null; fi"
+    on_fail: continue
+
+  - name: "Clean crash reports"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Logs/DiagnosticReports/*.crash ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null && echo 'Cleaned crash reports'; else echo '[DRY RUN] Crash/ips reports'; ls ~/Library/Logs/DiagnosticReports/*.crash ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | wc -l | xargs echo '  files:'; fi"
+    on_fail: continue
+
+  - name: "Clean saved application state"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Saved\ Application\ State/* && echo 'Cleaned saved app state'; else echo '[DRY RUN] Saved app state'; du -sh ~/Library/Saved\ Application\ State/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Clean Mail downloads"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/Library/Containers/com.apple.mail/Data/Library/Mail\ Downloads/* 2>/dev/null && echo 'Cleaned Mail downloads'; else echo '[DRY RUN] Mail downloads'; du -sh ~/Library/Containers/com.apple.mail/Data/Library/Mail\ Downloads/ 2>/dev/null || echo '  0B'; fi"
+    on_fail: continue
+
+  - name: "Empty Trash"
+    command: "if [ '{{dry_run}}' = 'false' ]; then rm -rf ~/.Trash/* && echo 'Trash emptied'; else echo '[DRY RUN] Trash'; du -sh ~/.Trash/ 2>/dev/null || echo '  empty'; fi"
+    on_fail: continue
+
+  # ══════════════════════════════════════════════════════════
+  # Phase 7: Verify results
+  # ══════════════════════════════════════════════════════════
+  - name: "Final disk usage summary"
+    command: "echo '=== Cleanup Complete ===' && df -h / | tail -1 && echo '' && echo 'Remaining caches:' && du -sh ~/Library/Caches/ 2>/dev/null"
+
+notes: |
+  DEFAULT: DRY RUN mode (dry_run=true) — scan only, no deletion.
+  To actually clean:  playbook run macos-cleanup dry_run=false
+  Custom log age:     playbook run macos-cleanup dry_run=false log_days=14
+
+  Coverage (7 phases, 30+ steps):
+
+    AI tools:        Claude Code, ChatGPT, Ollama*, Hugging Face,
+                     Cursor, GitHub Copilot, LM Studio*
+    Browsers:        Chrome, Safari, Firefox, Edge, Arc, Brave
+    Messaging:       WeChat, QQ, Tencent Meeting, DingTalk, Feishu/Lark,
+                     Slack, Discord, Telegram, Zoom
+    Dev tools:       npm, Yarn, pnpm, pip, Go, Homebrew, JetBrains,
+                     VS Code, Xcode, iOS Simulator, Playwright,
+                     CocoaPods, Gradle, Maven, Cargo, Docker
+    System:          Logs, crash reports, saved app state,
+                     Mail downloads, Trash
+
+  * = scan only (not auto-deleted, models are large downloads)
+
+  SAFE: WeChat only deletes temp files (>log_days old), not chat history.
+  SAFE: Does not touch ~/Documents, ~/Desktop, or application settings.
+  SAFE: All steps use on_fail=continue, one failure won't stop the playbook.

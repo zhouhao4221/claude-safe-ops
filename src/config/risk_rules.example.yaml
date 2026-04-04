@@ -1,0 +1,52 @@
+# Custom risk rules configuration example
+# Copy this file to risk_rules.yaml and adjust according to your business needs
+#
+# Custom rules take priority over built-in rules
+# risk_level options: LOW, MEDIUM, HIGH, CRITICAL
+
+rules:
+  # Business-specific high-risk operations
+  - pattern: "drop\\s+table\\s+orders"
+    risk_level: CRITICAL
+    description: "Delete orders table (critical business data)"
+
+  - pattern: "truncate\\s+table\\s+user"
+    risk_level: CRITICAL
+    description: "Truncate users table"
+
+  # Restarting specific services is considered high risk
+  - pattern: "systemctl\\s+restart\\s+payment-gateway"
+    risk_level: HIGH
+    description: "Restart payment gateway service"
+
+  - pattern: "systemctl\\s+restart\\s+order-service"
+    risk_level: HIGH
+    description: "Restart order service"
+
+  # Database backup commands are considered low risk
+  - pattern: "^mysqldump\\b"
+    risk_level: LOW
+    description: "MySQL database backup"
+
+  - pattern: "^pg_dump\\b"
+    risk_level: LOW
+    description: "PostgreSQL database backup"
+
+  # Health check script
+  - pattern: "^/opt/scripts/health_check\\.sh"
+    risk_level: LOW
+    description: "Business health check script"
+
+  # Log cleanup (standard operation per company policy)
+  - pattern: "logrotate\\s+-f"
+    risk_level: MEDIUM
+    description: "Force log rotation"
+
+  # Operations prohibited in production
+  - pattern: "apt-get\\s+dist-upgrade"
+    risk_level: CRITICAL
+    description: "Major OS upgrade (requires maintenance window)"
+
+  - pattern: "yum\\s+update\\s*$"
+    risk_level: HIGH
+    description: "Full YUM update"

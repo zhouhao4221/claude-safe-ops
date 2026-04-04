@@ -1,0 +1,31 @@
+name: high-load-diagnose
+description: High load diagnosis (load → CPU → memory → IO → processes → network)
+tags: [performance, diagnose, load]
+steps:
+  - name: Check system load and uptime
+    command: uptime && cat /proc/loadavg
+  - name: Top 10 CPU processes
+    command: ps aux --sort=-%cpu | head -11
+  - name: Memory usage overview
+    command: free -h
+  - name: Top 10 memory processes
+    command: ps aux --sort=-%mem | head -11
+  - name: Disk IO statistics
+    command: iostat -x 1 3 2>/dev/null || cat /proc/diskstats
+    on_fail: continue
+  - name: Check D-state processes (IO wait)
+    command: ps aux | awk '$8 ~ /D/ {print}' || echo "No D-state processes"
+    on_fail: continue
+  - name: Check process count
+    command: "echo \"Total processes: $(ps aux | wc -l)\" && echo \"Total threads: $(ls /proc/*/task 2>/dev/null | wc -l)\""
+    on_fail: continue
+  - name: Network connection statistics
+    command: ss -s
+    on_fail: continue
+  - name: Check recent dmesg errors
+    command: dmesg --time-format iso 2>/dev/null | tail -20 || dmesg | tail -20
+    on_fail: continue
+notes: |
+  All read-only diagnostic commands; no system state is modified.
+  Suitable for quick triage after receiving a load alert.
+  iostat requires the sysstat package; falls back to /proc/diskstats if not installed.

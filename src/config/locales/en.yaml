@@ -1,0 +1,171 @@
+# ClaudeSafeOps English locale
+# Keys use dot notation matching the source module structure
+
+# ─── Risk level labels ─────────────────────────────────────────────────────────
+risk:
+  low: "Low Risk"
+  medium: "Medium Risk"
+  high: "High Risk"
+  critical: "Critical Risk"
+
+# ─── CLI banner and help (main.py) ────────────────────────────────────────────
+banner:
+  subtitle: "Server Ops Automation"
+  tagline: "Risk assessment · Audit logs · Safe execution"
+
+help:
+  title: "Available Commands"
+  connect: "Connect to a host"
+  hosts: "View host inventory"
+  modules: "View available ops modules"
+  use: "Switch ops module"
+  run: "Execute remote command (risk-assessed)"
+  audit: "View last n audit records"
+  risk: "Assess command risk only (no execution)"
+  playbook: "Quick-enter playbook module (= use playbook)"
+  help: "Show this help"
+  exit: "Quit"
+
+# ─── Module registry descriptions ─────────────────────────────────────────────
+module:
+  system: "System info, service management, user management"
+  network: "Network diagnostics, firewall, port management"
+  disk: "Disk space, mounts, LVM"
+  process: "Process management, resource monitoring"
+  deploy: "App deployment, version rollback"
+  backup: "Data backup and recovery"
+  security: "Security scanning, permission audit"
+  log: "Log viewing and management"
+  playbook: "Ops playbooks (save/reuse verified workflows)"
+
+# ─── CLI messages (main.py) ───────────────────────────────────────────────────
+cli:
+  no_host_config: "No host config found. Edit ~/.claude-safe-ops/config/hosts.yaml first."
+  see_example: "See src/config/hosts.example.yaml for reference."
+  host_empty: "Host inventory is empty"
+  usage_connect: "Usage: connect <hostname|ip>"
+  connecting: "Connecting to {target} ..."
+  host_bound: "Host bound: {host}"
+  available_modules: "Available modules: {modules}"
+  connect_first: "Connect to a host first: connect <host>"
+  switched_module: "Switched to [{name}] module — {desc}"
+  type_help: "Type help to see available operations"
+  usage_run: "Usage: run <command>"
+  cmd_not_executed: "Command not executed (status: {status})"
+  usage_risk: "Usage: risk <command>"
+  no_rules_default: "No rules matched, default MEDIUM"
+  no_audit: "No audit records yet"
+  unknown_cmd: "Unknown command: {cmd}"
+  type_help_short: "Type help for usage"
+  goodbye: "Goodbye!"
+  arg_error: "Argument error: {error}"
+  exec_error: "Execution error: {error}"
+
+# Table headers
+table:
+  hostname: "Hostname"
+  ip: "IP"
+  port: "Port"
+  group: "Group"
+  user: "User"
+  tags: "Tags"
+  module: "Module"
+  description: "Description"
+  time: "Time"
+  host: "Host"
+  command: "Command"
+  risk: "Risk"
+  status: "Status"
+  step: "Step"
+  name: "Name"
+  source: "Source"
+
+# ─── Command executor messages ────────────────────────────────────────────────
+executor:
+  risk_title: "Risk Assessment"
+  target_host: "Target host"
+  command: "Command"
+  risk_level: "Risk level"
+  matched_rules: "Matched rules"
+  no_rules: "None (default MEDIUM)"
+  low_auto: "Low-risk command, auto-executing..."
+  medium_confirm: "Medium-risk command, confirmation required."
+  confirm_exec: "Confirm execution on {host}?"
+  cancelled: "Cancelled by user"
+  exec_cancelled: "Execution cancelled."
+  high_refused: "High-risk command, auto-execution refused!"
+  high_manual: "To proceed, manually run the following on the target host:"
+  high_reason: "High-risk command, manual execution required"
+  critical_banner: "!!! CRITICAL RISK OPERATION !!!"
+  critical_refused: "This command may cause irreversible damage. Auto-execution refused!"
+  critical_process: "Please follow this approval process:"
+  critical_step1: "1. Submit a change request describing the purpose and impact"
+  critical_step2: "2. Obtain approval from at least two ops leads"
+  critical_step3: "3. Execute manually during a scheduled maintenance window"
+  critical_step4: "4. Prepare a rollback plan"
+  critical_reason: "Critical-risk command, approval workflow required"
+  cmd_success: "Command succeeded (exit_code=0)"
+  cmd_done: "Command completed, exit code: {code}"
+  exec_err: "Execution error: {error}"
+
+# ─── Session messages ─────────────────────────────────────────────────────────
+session:
+  uploaded: "File uploaded: {local} -> {host}:{remote}"
+  downloaded: "File downloaded: {host}:{remote} -> {local}"
+
+# ─── SSH client messages ──────────────────────────────────────────────────────
+ssh:
+  password_prompt: "Enter password for {user}@{host}: "
+
+# ─── Playbook messages ───────────────────────────────────────────────────────
+playbook:
+  no_tag: "No playbooks found with tag '{tag}'"
+  none_available: "No playbooks available"
+  source_builtin: "Built-in"
+  source_user: "User"
+  not_found: "Playbook not found: {name}"
+  usage_show: "Usage: show <playbook_name>"
+  usage_run: "Usage: run <playbook_name> [var=value ...]"
+  usage_save: "Usage: save <playbook_name>"
+  usage_delete: "Usage: delete <playbook_name>"
+  missing_vars: "The following variables are not assigned: {vars}"
+  missing_vars_hint: "Usage: run {name} {usage}"
+  target_host: "Target Host"
+  variables: "Variables"
+  exec_steps: "Execution Steps"
+  confirm_run: "Confirm running this playbook on {host}?"
+  cancelled: "Cancelled"
+  step_done: "Done"
+  step_failed_cont: "Failed (exit={code}), continuing to next step"
+  step_failed_abort: "Failed (exit={code}), playbook aborted"
+  summary_title: "Execution Summary"
+  steps_skipped: "... {n} step(s) skipped"
+  not_executed: "Not executed"
+  all_succeeded: "Playbook completed: {ok}/{total} step(s) all succeeded"
+  partial: "Playbook completed: {ok} succeeded, {fail} failed, {skip} skipped"
+  builtin_override: "'{name}' is a built-in playbook; saving will create a user version that overrides the built-in one"
+  confirm_overwrite: "User playbook '{name}' already exists. Overwrite?"
+  no_history: "No available command history records"
+  save_tip: "Tip: Execute some commands first, then use save to create a playbook"
+  recent_title: "Recently Executed Commands"
+  select_cmds: "Select command numbers to include (comma-separated, e.g. 1,3,5): "
+  no_selection: "No commands selected"
+  invalid_selection: "Invalid selection"
+  desc_prompt: "Playbook description: "
+  tags_prompt: "Tags (comma-separated, press Enter to skip): "
+  saved: "Playbook saved: {path}"
+  save_edit_tip: "Tip: You can manually edit the YAML file to add variables ({{var}}) and notes"
+  cannot_delete_builtin: "Cannot delete built-in playbooks"
+  confirm_delete: "Confirm deleting playbook '{name}'?"
+  deleted: "Playbook deleted: {name}"
+  delete_failed: "Deletion failed"
+  continue_on_fail: "continue on failure"
+  notes: "Notes"
+  steps: "Steps"
+  path: "Path"
+
+# ─── Inventory messages ───────────────────────────────────────────────────────
+inventory:
+  empty_config: "Host config file is empty or malformed: {path}"
+  loaded: "Loaded {count} host configs: {path}"
+  load_failed: "Failed to load host config: {path}"

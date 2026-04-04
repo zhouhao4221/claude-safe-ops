@@ -1,0 +1,26 @@
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.env
+.env.*
+*.log
+.venv/
+
+# 用户数据（全部在 ~/.claude-safe-ops/，不会出现在项目目录）
+# 以下是防止误操作的兜底规则
+credentials.yaml
+credentials.yml
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# Claude Code 本地设置（不共享）
+.claude/settings.local.json
+
+# 运行时产物
+logs/
