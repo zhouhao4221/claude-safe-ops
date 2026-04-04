@@ -6,6 +6,14 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Cross-platform: detect sed extended regex flag (-E for BSD/new GNU, -r for old GNU)
+if sed -E '' /dev/null 2>/dev/null; then
+    SED_ERE="sed -E"
+else
+    SED_ERE="sed -r"
+fi
+
 RULES_FILE="${PROJECT_ROOT}/src/config/risk_rules.yaml"
 USER_RULES="$HOME/.claude-safe-ops/config/risk_rules.yaml"
 
@@ -27,18 +35,18 @@ fi
 REMOTE_CMD=""
 
 if echo "$COMMAND" | grep -qiE '^\s*ssh\s'; then
-    REMOTE_CMD=$(echo "$COMMAND" | sed -E "
-        s/^\s*ssh\s+//;
-        s/(-[oipFJL]\s+\S+\s+)//g;
-        s/(-[46AaCfGgKkMNnqsTtVvXxYy]\s*)//g;
-        s/^[^ ]+\s+//;
+    REMOTE_CMD=$(echo "$COMMAND" | $SED_ERE "
+        s/^[[:space:]]*ssh[[:space:]]+//;
+        s/(-[oipFJL][[:space:]]+[^[:space:]]+[[:space:]]+)//g;
+        s/(-[46AaCfGgKkMNnqsTtVvXxYy][[:space:]]*)//g;
+        s/^[^ ]+[[:space:]]+//;
         s/^['\"]//;
         s/['\"]$//;
     ")
 elif echo "$COMMAND" | grep -qiE '^\s*scp\s'; then
     REMOTE_CMD="scp_file_transfer"
 elif echo "$COMMAND" | grep -qiE 'ansible.*-a\s'; then
-    REMOTE_CMD=$(echo "$COMMAND" | sed -E "s/.*-a\s+['\"]?([^'\"]+)['\"]?.*/\1/")
+    REMOTE_CMD=$(echo "$COMMAND" | $SED_ERE "s/.*-a[[:space:]]+['\"]?([^'\"]+)['\"]?.*/\1/")
 elif echo "$COMMAND" | grep -qiE '^\s*rsync\s'; then
     REMOTE_CMD="rsync_file_sync"
 fi
