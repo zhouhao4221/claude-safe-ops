@@ -1,0 +1,29 @@
+name: ssh-bruteforce-check
+description: SSH brute-force detection (failed logins → source IP stats → current connections → security config)
+tags: [security, ssh, audit]
+steps:
+  - name: Recent SSH login failures
+    command: grep -i "failed password\|authentication failure" /var/log/auth.log 2>/dev/null | tail -20 || grep -i "failed password\|authentication failure" /var/log/secure 2>/dev/null | tail -20 || journalctl -u sshd --since "24 hours ago" --no-pager 2>/dev/null | grep -i "failed\|invalid" | tail -20
+    on_fail: continue
+  - name: Top 10 failed login source IPs
+    command: "grep -i 'failed password' /var/log/auth.log 2>/dev/null | grep -oP '\\d+\\.\\d+\\.\\d+\\.\\d+' | sort | uniq -c | sort -rn | head -10 || grep -i 'failed password' /var/log/secure 2>/dev/null | grep -oE '[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' | sort | uniq -c | sort -rn | head -10"
+    on_fail: continue
+  - name: Top 10 attempted usernames
+    command: "grep -i 'failed password' /var/log/auth.log 2>/dev/null | grep -oP 'for \\K\\S+' | sort | uniq -c | sort -rn | head -10 || grep -i 'failed password' /var/log/secure 2>/dev/null | grep -oP 'for \\K\\S+' | sort | uniq -c | sort -rn | head -10"
+    on_fail: continue
+  - name: Current SSH connections
+    command: ss -tnp | grep :22 || who
+    on_fail: continue
+  - name: SSH security config check
+    command: "echo '--- PermitRootLogin ---' && grep -i '^PermitRootLogin' /etc/ssh/sshd_config 2>/dev/null || echo 'Not set (default: allow)' && echo '--- PasswordAuthentication ---' && grep -i '^PasswordAuthentication' /etc/ssh/sshd_config 2>/dev/null || echo 'Not set (default: allow)' && echo '--- MaxAuthTries ---' && grep -i '^MaxAuthTries' /etc/ssh/sshd_config 2>/dev/null || echo 'Not set (default: 6)'"
+    on_fail: continue
+  - name: fail2ban status (if installed)
+    command: systemctl is-active fail2ban 2>/dev/null && fail2ban-client status sshd 2>/dev/null || echo "fail2ban is not installed or not running"
+    on_fail: continue
+notes: |
+  All read-only check commands.
+  Auto-adapts to Debian/Ubuntu (auth.log) and RHEL/CentOS (secure) log paths.
+  If brute-force activity is detected, recommended actions:
+  1. Disable password login (PasswordAuthentication no)
+  2. Install fail2ban
+  3. Restrict SSH source IPs

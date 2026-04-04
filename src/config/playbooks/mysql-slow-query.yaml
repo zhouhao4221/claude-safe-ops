@@ -1,0 +1,30 @@
+name: mysql-slow-query
+description: MySQL slow query diagnosis (slow query status → recent slow queries → process list → table locks → connections)
+tags: [mysql, database, performance]
+vars:
+  mysql_user: root
+steps:
+  - name: Check slow query log config
+    command: mysql -u{{mysql_user}} -e "SHOW VARIABLES LIKE 'slow_query%'; SHOW VARIABLES LIKE 'long_query_time';" 2>/dev/null || echo "MySQL connection failed, please check permissions"
+    on_fail: continue
+  - name: View recent slow queries (last 20)
+    command: "SLOW_LOG=$(mysql -u{{mysql_user}} -N -e \"SHOW VARIABLES LIKE 'slow_query_log_file'\" 2>/dev/null | awk '{print $2}'); if [ -f \"$SLOW_LOG\" ]; then tail -100 \"$SLOW_LOG\" | grep -A5 '^# Time\\|^# User' | tail -40; else echo \"Slow query log file does not exist: $SLOW_LOG\"; fi"
+    on_fail: continue
+  - name: Current active queries
+    command: mysql -u{{mysql_user}} -e "SHOW FULL PROCESSLIST;" 2>/dev/null
+    on_fail: continue
+  - name: Check table locks
+    command: mysql -u{{mysql_user}} -e "SHOW OPEN TABLES WHERE In_use > 0;" 2>/dev/null || echo "No table locks"
+    on_fail: continue
+  - name: InnoDB status summary
+    command: mysql -u{{mysql_user}} -e "SHOW ENGINE INNODB STATUS\G" 2>/dev/null | grep -A5 "SEMAPHORES\|TRANSACTIONS\|ROW OPERATIONS\|BUFFER POOL"
+    on_fail: continue
+  - name: Connection statistics
+    command: mysql -u{{mysql_user}} -e "SHOW STATUS LIKE 'Threads_%'; SHOW STATUS LIKE 'Max_used_connections';" 2>/dev/null
+    on_fail: continue
+notes: |
+  mysql_user defaults to root; if a password is required, run manually.
+  Applicable to scenarios with direct MySQL instance access.
+  If slow query logging is not enabled, consider:
+    SET GLOBAL slow_query_log = 'ON';
+    SET GLOBAL long_query_time = 1;

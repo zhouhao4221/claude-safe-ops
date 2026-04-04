@@ -1,0 +1,31 @@
+name: disk-cleanup
+description: Disk cleanup (locate large files → clean logs → clean cache → confirm freed)
+tags: [disk, cleanup, maintenance]
+vars:
+  threshold_mb: "100"
+  log_days: "30"
+steps:
+  - name: View disk usage overview
+    command: df -h
+  - name: Locate large files (> threshold_mb MB)
+    command: find / -xdev -type f -size +{{threshold_mb}}M -exec ls -lh {} \; 2>/dev/null | sort -k5 -h | tail -20
+    on_fail: continue
+  - name: Check /var/log usage
+    command: du -sh /var/log/ 2>/dev/null && du -sh /var/log/* 2>/dev/null | sort -h | tail -10
+    on_fail: continue
+  - name: Clean expired logs (> log_days days)
+    command: find /var/log -name "*.gz" -mtime +{{log_days}} -delete 2>/dev/null && find /var/log -name "*.old" -mtime +{{log_days}} -delete 2>/dev/null && echo "Cleaned compressed logs older than {{log_days}} days"
+    on_fail: continue
+  - name: Clean package manager cache
+    command: "apt-get clean 2>/dev/null || yum clean all 2>/dev/null || dnf clean all 2>/dev/null; echo 'Package cache cleaned'"
+    on_fail: continue
+  - name: Clean systemd journal (keep last 7 days)
+    command: journalctl --vacuum-time=7d 2>/dev/null || echo "journalctl not available"
+    on_fail: continue
+  - name: Confirm disk space freed
+    command: df -h
+notes: |
+  threshold_mb controls the large file scan threshold (default 100MB).
+  log_days controls how many days of compressed logs to retain (default 30 days).
+  Package cache cleanup auto-adapts to apt/yum/dnf.
+  Recommend running read-only steps first to confirm before cleaning; change on_fail to stop if unsure.

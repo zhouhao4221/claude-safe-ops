@@ -1,0 +1,171 @@
+# ClaudeSafeOps 中文语言包
+# 键名与 en.yaml 一一对应
+
+# ─── 风险等级标签 ─────────────────────────────────────────────────────────────
+risk:
+  low: "低风险"
+  medium: "中风险"
+  high: "高风险"
+  critical: "严重风险"
+
+# ─── CLI 横幅与帮助 ──────────────────────────────────────────────────────────
+banner:
+  subtitle: "服务器运维自动化工具"
+  tagline: "风险评估 · 审计日志 · 安全执行"
+
+help:
+  title: "可用命令"
+  connect: "连接到指定主机"
+  hosts: "查看主机清单"
+  modules: "查看可用运维模块"
+  use: "切换运维模块"
+  run: "执行远程命令（经过风险评估）"
+  audit: "查看最近 n 条审计记录"
+  risk: "仅评估命令风险（不执行）"
+  playbook: "快捷进入剧本模块（等同 use playbook）"
+  help: "显示此帮助"
+  exit: "退出"
+
+# ─── 模块描述 ─────────────────────────────────────────────────────────────────
+module:
+  system: "系统信息、服务管理、用户管理"
+  network: "网络诊断、防火墙、端口管理"
+  disk: "磁盘空间、挂载、LVM"
+  process: "进程管理、资源监控"
+  deploy: "应用部署、版本回滚"
+  backup: "数据备份与恢复"
+  security: "安全扫描、权限审计"
+  log: "日志查看与管理"
+  playbook: "运维剧本（保存/复用验证过的运维方案）"
+
+# ─── CLI 消息 ─────────────────────────────────────────────────────────────────
+cli:
+  no_host_config: "未找到主机配置，请先编辑 ~/.claude-safe-ops/config/hosts.yaml"
+  see_example: "可参考 src/config/hosts.example.yaml"
+  host_empty: "主机清单为空"
+  usage_connect: "用法: connect <主机名|IP>"
+  connecting: "正在连接 {target} ..."
+  host_bound: "已绑定主机: {host}"
+  available_modules: "可用模块: {modules}"
+  connect_first: "请先连接主机: connect <host>"
+  switched_module: "已切换到 [{name}] 模块 — {desc}"
+  type_help: "输入 help 查看可用操作"
+  usage_run: "用法: run <命令>"
+  cmd_not_executed: "命令未执行（状态: {status}）"
+  usage_risk: "用法: risk <命令>"
+  no_rules_default: "未匹配规则，默认 MEDIUM"
+  no_audit: "暂无审计记录"
+  unknown_cmd: "未知命令: {cmd}"
+  type_help_short: "输入 help 查看帮助"
+  goodbye: "再见！"
+  arg_error: "参数错误: {error}"
+  exec_error: "执行异常: {error}"
+
+# 表头
+table:
+  hostname: "主机名"
+  ip: "IP"
+  port: "端口"
+  group: "分组"
+  user: "用户"
+  tags: "标签"
+  module: "模块"
+  description: "说明"
+  time: "时间"
+  host: "主机"
+  command: "命令"
+  risk: "风险"
+  status: "状态"
+  step: "步骤"
+  name: "名称"
+  source: "来源"
+
+# ─── 命令执行器消息 ──────────────────────────────────────────────────────────
+executor:
+  risk_title: "风险评估"
+  target_host: "目标主机"
+  command: "命令"
+  risk_level: "风险等级"
+  matched_rules: "匹配规则"
+  no_rules: "无（默认 MEDIUM）"
+  low_auto: "低风险命令，自动执行..."
+  medium_confirm: "中风险命令，需要确认执行。"
+  confirm_exec: "确认在 {host} 上执行此命令？"
+  cancelled: "用户取消"
+  exec_cancelled: "已取消执行。"
+  high_refused: "高风险命令，拒绝自动执行！"
+  high_manual: "如需执行，请在目标主机上手动运行以下命令："
+  high_reason: "高风险命令，需手动执行"
+  critical_banner: "!!! 严重风险操作 !!!"
+  critical_refused: "此命令可能造成不可逆的严重后果，拒绝自动执行！"
+  critical_process: "请通过以下流程申请执行："
+  critical_step1: "1. 提交变更工单，描述操作目的和影响范围"
+  critical_step2: "2. 获得至少两名运维负责人审批"
+  critical_step3: "3. 在指定维护窗口内手动执行"
+  critical_step4: "4. 准备回滚方案"
+  critical_reason: "严重风险命令，需走审批流程"
+  cmd_success: "命令执行成功（exit_code=0）"
+  cmd_done: "命令执行完成，退出码: {code}"
+  exec_err: "执行出错: {error}"
+
+# ─── 会话消息 ─────────────────────────────────────────────────────────────────
+session:
+  uploaded: "文件已上传: {local} -> {host}:{remote}"
+  downloaded: "文件已下载: {host}:{remote} -> {local}"
+
+# ─── SSH 客户端消息 ──────────────────────────────────────────────────────────
+ssh:
+  password_prompt: "请输入 {user}@{host} 的密码: "
+
+# ─── 剧本消息 ─────────────────────────────────────────────────────────────────
+playbook:
+  no_tag: "未找到标签为 '{tag}' 的剧本"
+  none_available: "暂无剧本"
+  source_builtin: "内置"
+  source_user: "用户"
+  not_found: "未找到剧本: {name}"
+  usage_show: "用法: show <剧本名>"
+  usage_run: "用法: run <剧本名> [变量=值 ...]"
+  usage_save: "用法: save <剧本名>"
+  usage_delete: "用法: delete <剧本名>"
+  missing_vars: "以下变量未赋值: {vars}"
+  missing_vars_hint: "用法: run {name} {usage}"
+  target_host: "目标主机"
+  variables: "变量"
+  exec_steps: "执行步骤"
+  confirm_run: "确认在 {host} 上执行此剧本？"
+  cancelled: "已取消"
+  step_done: "完成"
+  step_failed_cont: "失败（exit={code}），继续下一步"
+  step_failed_abort: "失败（exit={code}），剧本已中止"
+  summary_title: "执行结果汇总"
+  steps_skipped: "... 跳过 {n} 个步骤"
+  not_executed: "未执行"
+  all_succeeded: "剧本执行完成: {ok}/{total} 步全部成功"
+  partial: "剧本执行完成: {ok} 成功, {fail} 失败, {skip} 跳过"
+  builtin_override: "'{name}' 是内置剧本，保存后将创建覆盖内置版本的用户版本"
+  confirm_overwrite: "用户剧本 '{name}' 已存在，是否覆盖？"
+  no_history: "暂无可用的命令历史记录"
+  save_tip: "提示: 先执行一些命令，再使用 save 创建剧本"
+  recent_title: "最近执行的命令"
+  select_cmds: "选择要包含的命令编号（逗号分隔，如 1,3,5）: "
+  no_selection: "未选择任何命令"
+  invalid_selection: "选择无效"
+  desc_prompt: "剧本描述: "
+  tags_prompt: "标签（逗号分隔，按回车跳过）: "
+  saved: "剧本已保存: {path}"
+  save_edit_tip: "提示: 可手动编辑 YAML 文件添加变量（{{var}}）和备注"
+  cannot_delete_builtin: "无法删除内置剧本"
+  confirm_delete: "确认删除剧本 '{name}'？"
+  deleted: "剧本已删除: {name}"
+  delete_failed: "删除失败"
+  continue_on_fail: "失败继续"
+  notes: "备注"
+  steps: "步骤"
+  path: "路径"
+
+# ─── 主机清单消息 ─────────────────────────────────────────────────────────────
+inventory:
+  empty_config: "主机配置文件为空或格式不正确: {path}"
+  loaded: "已加载 {count} 台主机配置: {path}"
+  load_failed: "加载主机配置失败: {path}"

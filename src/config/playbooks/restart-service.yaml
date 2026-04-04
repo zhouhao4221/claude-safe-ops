@@ -1,0 +1,24 @@
+name: restart-service
+description: General service restart workflow (status check → config validation → restart → verify)
+tags: [service, restart, general]
+vars:
+  service: nginx
+  port: "80"
+steps:
+  - name: Check current service status
+    command: systemctl status {{service}} --no-pager
+    on_fail: continue
+  - name: Validate configuration syntax
+    command: "{{service}} -t 2>&1 || echo 'Skipping config check (service may not support -t)'"
+    on_fail: continue
+  - name: Restart service
+    command: systemctl restart {{service}}
+  - name: Confirm service is running
+    command: systemctl is-active {{service}}
+  - name: Verify port is listening
+    command: ss -tlnp | grep :{{port}}
+    on_fail: continue
+notes: |
+  Applicable to services managed by systemd.
+  If the config check fails, fix the configuration before restarting.
+  The port variable is used to verify service port recovery; adjust for different services.

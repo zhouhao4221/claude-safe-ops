@@ -1,0 +1,75 @@
+# Host inventory configuration example
+# Copy this file to hosts.yaml and update with your actual host info
+# Note: Do not put passwords in this file; authentication is handled via SSH Agent or interactive input
+
+hosts:
+  # Web server group
+  - hostname: web-01
+    ip: 192.168.1.10
+    port: 22
+    username: deploy
+    group: webservers
+    tags: [production, nginx, frontend]
+    auth_method: key
+    key_path: ~/.ssh/id_rsa
+    description: "Production web frontend server #1"
+
+  - hostname: web-02
+    ip: 192.168.1.11
+    port: 22
+    username: deploy
+    group: webservers
+    tags: [production, nginx, frontend]
+    auth_method: key
+    key_path: ~/.ssh/id_rsa
+    description: "Production web frontend server #2"
+
+  # Application server group
+  - hostname: app-01
+    ip: 192.168.1.20
+    port: 22
+    username: app
+    group: appservers
+    tags: [production, java, backend]
+    auth_method: agent
+    description: "Production application server #1"
+
+  - hostname: app-02
+    ip: 192.168.1.21
+    port: 22
+    username: app
+    group: appservers
+    tags: [production, java, backend]
+    auth_method: agent
+    description: "Production application server #2"
+
+  # Database servers
+  - hostname: db-master
+    ip: 192.168.1.30
+    port: 22
+    username: dba
+    group: databases
+    tags: [production, mysql, master]
+    auth_method: key
+    key_path: ~/.ssh/db_key
+    description: "MySQL primary"
+
+  - hostname: db-slave
+    ip: 192.168.1.31
+    port: 22
+    username: dba
+    group: databases
+    tags: [production, mysql, slave]
+    auth_method: key
+    key_path: ~/.ssh/db_key
+    description: "MySQL replica"
+
+  # Test environment
+  - hostname: dev-01
+    ip: 10.0.0.10
+    port: 2222
+    username: dev
+    group: development
+    tags: [staging, all-in-one]
+    auth_method: auto
+    description: "Dev/test all-in-one server"
