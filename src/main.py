@@ -183,6 +183,10 @@ def main() -> None:
                 current_module_name = None
                 current_ops = None
                 print(success(t("cli.host_bound", host=ssh_config.host)))
+                # Load (or refresh) the host metadata cache and print a summary.
+                meta = current_session.load_metadata()
+                if meta is not None and meta.fingerprint:
+                    print(info(f"  {meta.summary_line()}"))
 
             elif cmd == "modules":
                 rows = [

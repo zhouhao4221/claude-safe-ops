@@ -54,6 +54,29 @@ Host *
 
 **Claude Code should use SSH config aliases** (e.g., `ssh twms 'command'`) instead of full `ssh -i key user@host` to benefit from ControlMaster. Host aliases are defined in `~/.ssh/config` and should match entries in `~/.claude-safe-ops/config/hosts.yaml`.
 
+## Server Metadata Cache
+
+To avoid re-probing a host on every interaction, first-connect info is cached at:
+
+```
+~/.claude-safe-ops/cache/hosts/<alias>.json
+```
+
+Each file holds:
+- `fingerprint` — OS, kernel, CPU, memory, disks, uptime, running services (TTL 24h)
+- `software`    — detected software with version, binary path, config files, conf/data/log dirs, systemd unit, running status (TTL 12h)
+
+**Claude Code usage convention**: before the *first* operation on a host within a session, run:
+
+```bash
+bash scripts/host-info.sh <alias>                # read cache, auto-refresh if stale
+bash scripts/host-info.sh <alias> --force        # force re-collect
+```
+
+Use the JSON output to ground subsequent suggestions — e.g. "nginx config is at `/etc/nginx/nginx.conf`" comes from the cache rather than re-running probes. The software probe list is defined in `src/config/software_probes.yaml` and can be fully overridden by `~/.claude-safe-ops/config/software_probes.yaml` to add custom internal services.
+
+In Python CLI mode, `HostSession.load_metadata()` performs the same lookup automatically on `connect` and prints a one-line summary.
+
 ## Onboarding (First-time Setup Guide)
 
 When a user launches Claude Code in this project directory, check the following conditions to guide setup:

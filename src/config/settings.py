@@ -50,6 +50,8 @@ USER_DATA_DIR = Path.home() / ".claude-safe-ops"
 USER_CONFIG_DIR = USER_DATA_DIR / "config"
 USER_AUDIT_DIR = USER_DATA_DIR / "audit"
 USER_SESSION_DIR = USER_DATA_DIR / "session"
+USER_CACHE_DIR = USER_DATA_DIR / "cache"
+USER_HOST_CACHE_DIR = USER_CACHE_DIR / "hosts"
 
 # Project default config (read-only, shipped with code)
 DEFAULT_CONFIG_DIR = PROJECT_ROOT / "src" / "config"
@@ -115,6 +117,15 @@ SSH_MAX_RETRIES = 3               # Max retries
 SSH_RETRY_DELAY = 2               # Retry delay (seconds)
 SSH_MAX_CONNECTIONS_PER_HOST = 5  # Max connections per host
 SSH_KEEPALIVE_INTERVAL = 30       # Keepalive interval (seconds)
+
+# ─── Host metadata cache ──────────────────────────────────────────────────────────
+# TTLs control when cached host fingerprints are refreshed on next connect.
+# Hardware/OS info changes rarely; software info changes more frequently.
+
+HOST_CACHE_TTL_SECONDS = 24 * 3600       # Hardware/OS fingerprint TTL (24h)
+SOFTWARE_CACHE_TTL_SECONDS = 12 * 3600   # Software probe TTL (12h)
+SOFTWARE_PROBES_CONFIG_PATH = USER_CONFIG_DIR / "software_probes.yaml"
+DEFAULT_SOFTWARE_PROBES_PATH = DEFAULT_CONFIG_DIR / "software_probes.yaml"
 
 # ─── Audit log ────────────────────────────────────────────────────────────────────
 

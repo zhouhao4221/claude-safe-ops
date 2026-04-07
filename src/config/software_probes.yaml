@@ -1,0 +1,122 @@
+# Built-in software probes.
+# Each probe is a read-only shell snippet (LOW risk) executed on the remote host
+# to detect whether a piece of software is installed and to collect its basic
+# facts: binary path, version, config files, service unit, data/log directories.
+#
+# Users can override / extend this file by creating:
+#   ~/.claude-safe-ops/config/software_probes.yaml
+# When the user file exists, its `probes:` list FULLY REPLACES the built-in list
+# (copy this file as your starting point).
+#
+# Probe fields:
+#   name     : short identifier used as the key in the cached "software" dict
+#   detect   : command whose exit code 0 means "installed"
+#   bin      : command that prints the absolute binary path (optional)
+#   version  : command that prints a version string (stderr merged)
+#   config   : list of candidate config file paths; first existing one wins
+#   conf_dir : list of candidate config directories
+#   data_dir : list of candidate data directories
+#   log_dir  : list of candidate log directories
+#   service  : systemd unit name (used to query status)
+
+probes:
+  - name: nginx
+    detect: "command -v nginx"
+    bin: "command -v nginx"
+    version: "nginx -v 2>&1"
+    config: ["/etc/nginx/nginx.conf"]
+    conf_dir: ["/etc/nginx/conf.d", "/etc/nginx/sites-enabled"]
+    log_dir: ["/var/log/nginx"]
+    service: "nginx"
+
+  - name: mysql
+    detect: "command -v mysqld || command -v mysql"
+    bin: "command -v mysqld || command -v mysql"
+    version: "mysqld --version 2>&1 || mysql --version 2>&1"
+    config: ["/etc/my.cnf", "/etc/mysql/my.cnf", "/etc/mysql/mysql.conf.d/mysqld.cnf"]
+    data_dir: ["/var/lib/mysql"]
+    log_dir: ["/var/log/mysql", "/var/log/mysqld.log"]
+    service: "mysqld"
+
+  - name: mariadb
+    detect: "command -v mariadbd || systemctl list-unit-files 2>/dev/null | grep -q '^mariadb'"
+    version: "mariadbd --version 2>&1 || mysql --version 2>&1"
+    config: ["/etc/my.cnf", "/etc/mysql/mariadb.conf.d/50-server.cnf"]
+    data_dir: ["/var/lib/mysql"]
+    service: "mariadb"
+
+  - name: postgres
+    detect: "command -v psql"
+    bin: "command -v psql"
+    version: "psql --version 2>&1"
+    config: ["/etc/postgresql/main/postgresql.conf", "/var/lib/pgsql/data/postgresql.conf"]
+    data_dir: ["/var/lib/postgresql", "/var/lib/pgsql"]
+    service: "postgresql"
+
+  - name: redis
+    detect: "command -v redis-server"
+    bin: "command -v redis-server"
+    version: "redis-server --version 2>&1"
+    config: ["/etc/redis/redis.conf", "/etc/redis.conf"]
+    log_dir: ["/var/log/redis"]
+    service: "redis"
+
+  - name: docker
+    detect: "command -v docker"
+    bin: "command -v docker"
+    version: "docker --version 2>&1"
+    config: ["/etc/docker/daemon.json"]
+    data_dir: ["/var/lib/docker"]
+    service: "docker"
+
+  - name: containerd
+    detect: "command -v containerd"
+    version: "containerd --version 2>&1"
+    config: ["/etc/containerd/config.toml"]
+    service: "containerd"
+
+  - name: kubelet
+    detect: "command -v kubelet"
+    version: "kubelet --version 2>&1"
+    config: ["/var/lib/kubelet/config.yaml", "/etc/kubernetes/kubelet.conf"]
+    service: "kubelet"
+
+  - name: java
+    detect: "command -v java"
+    bin: "command -v java"
+    version: "java -version 2>&1"
+
+  - name: python
+    detect: "command -v python3 || command -v python"
+    bin: "command -v python3 || command -v python"
+    version: "python3 --version 2>&1 || python --version 2>&1"
+
+  - name: node
+    detect: "command -v node"
+    bin: "command -v node"
+    version: "node --version 2>&1"
+
+  - name: go
+    detect: "command -v go"
+    version: "go version 2>&1"
+
+  - name: php
+    detect: "command -v php"
+    version: "php --version 2>&1 | head -1"
+    config: ["/etc/php.ini"]
+    conf_dir: ["/etc/php"]
+
+  - name: apache
+    detect: "command -v apachectl || command -v httpd"
+    version: "apachectl -v 2>&1 || httpd -v 2>&1"
+    config: ["/etc/httpd/conf/httpd.conf", "/etc/apache2/apache2.conf"]
+    conf_dir: ["/etc/httpd/conf.d", "/etc/apache2/sites-enabled"]
+    log_dir: ["/var/log/httpd", "/var/log/apache2"]
+    service: "httpd"
+
+  - name: mongodb
+    detect: "command -v mongod"
+    version: "mongod --version 2>&1 | head -1"
+    config: ["/etc/mongod.conf"]
+    data_dir: ["/var/lib/mongo", "/var/lib/mongodb"]
+    service: "mongod"

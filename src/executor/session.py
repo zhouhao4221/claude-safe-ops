@@ -48,6 +48,23 @@ class HostSession:
     def __init__(self, executor: CommandExecutor, ssh_config: SSHConfig) -> None:
         self._executor = executor
         self._ssh_config = ssh_config
+        # Populated lazily by ``load_metadata`` so tests and offline uses don't
+        # pay the cost of probing a remote host on construction.
+        self._metadata = None  # type: ignore[assignment]
+
+    @property
+    def metadata(self):
+        """Cached host metadata (HostMetadata | None). Call load_metadata() first."""
+        return self._metadata
+
+    def load_metadata(self, *, force: bool = False):
+        """Load or refresh the host metadata cache. Returns HostMetadata or None on failure."""
+        try:
+            from src.utils.host_cache import HostMetadataCache
+            self._metadata = HostMetadataCache().get_or_fetch(self, force=force)
+        except Exception:  # noqa: BLE001
+            self._metadata = None
+        return self._metadata
 
     @property
     def host(self) -> str:

@@ -43,7 +43,7 @@ echo ""
 # ── 2. Initialize ~/.claude-safe-ops/ ──────────────────────────────
 info "Initializing user data directory... (初始化用户数据目录)"
 
-mkdir -p "${USER_DIR}"/{config,audit,session,logs,playbooks}
+mkdir -p "${USER_DIR}"/{config,audit,session,logs,playbooks,cache/hosts}
 
 # Copy config templates (do not overwrite existing files)
 if [[ ! -f "${USER_DIR}/config/hosts.yaml" ]]; then
