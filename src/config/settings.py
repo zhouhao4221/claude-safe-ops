@@ -63,6 +63,9 @@ RISK_RULES_CONFIG_PATH = USER_CONFIG_DIR / "risk_rules.yaml"
 CREDENTIALS_CONFIG_PATH = USER_CONFIG_DIR / "credentials.yaml"
 SESSION_FILE_PATH = USER_SESSION_DIR / "current_host.json"
 
+# Report output directory (project-local, easy to find in IDE/Finder)
+REPORT_DIR = PROJECT_ROOT / "reports"
+
 # Playbook directories (built-in shipped with project; user custom in ~/.claude-safe-ops/)
 DEFAULT_PLAYBOOK_DIR = DEFAULT_CONFIG_DIR / "playbooks"
 USER_PLAYBOOK_DIR = USER_DATA_DIR / "playbooks"

@@ -24,3 +24,14 @@ id_ed25519*
 
 # 运行时产物
 logs/
+
+# 生成的报告文件（正式保存到 ~/.claude-safe-ops/reports/）
+# 防止误放在项目目录下
+*-incident-report-*.md
+*-operation-log-*.md
+*-runbook-*.md
+*-change-record-*.md
+*-health-check-*.md
+*-audit-summary-*.md
+*-diagnostic-*.md
+reports/

@@ -164,6 +164,88 @@ playbook:
   steps: "단계"
   path: "경로"
 
+# ─── 보고서 메시지 ───────────────────────────────────────────────────────────
+report:
+  meta:
+    type: "보고서 유형"
+    created_at: "생성 시간"
+    host: "대상 호스트"
+    severity: "심각도"
+    operator: "담당자"
+    time_range: "작업 시간대"
+  type:
+    incident: "장애 보고서"
+    audit-summary: "감사 요약"
+    health-check: "상태 점검"
+    diagnostic: "진단 보고서"
+    operation-log: "작업 기록"
+    runbook: "운영 매뉴얼"
+    change-record: "변경 기록"
+    custom: "보고서"
+  section:
+    summary: "요약"
+    environment: "서버 환경"
+    symptoms: "장애 현상"
+    root_cause: "원인 분석"
+    impact: "영향 평가"
+    remediation: "조치 과정"
+    recommendations: "개선 제안"
+    reference_data: "참고 데이터"
+    time_range: "시간 범위"
+    command_stats: "명령 통계"
+    risk_distribution: "위험 분포"
+    high_risk_commands: "고위험 명령"
+    top_operators: "담당자 순위"
+    system_overview: "시스템 개요"
+    cpu_memory: "CPU 및 메모리"
+    disk_usage: "디스크 사용량"
+    services: "서비스 상태"
+    security_checks: "보안 점검"
+    investigation: "조사 과정"
+    findings: "조사 결과"
+    # 프로세스 문서 섹션
+    objective: "작업 목적"
+    operation_timeline: "작업 타임라인"
+    result_summary: "실행 결과"
+    notes: "비고"
+    overview: "개요"
+    prerequisites: "사전 조건"
+    operation_steps: "작업 절차"
+    verification: "검증 방법"
+    rollback: "롤백 계획"
+    change_reason: "변경 사유"
+    change_scope: "변경 범위"
+    before_after: "변경 전후 비교"
+    reason: "사유"
+  # 통계 라벨
+  stats:
+    total_commands: "총 명령 수"
+    succeeded: "성공"
+    failed: "실패"
+    blocked: "차단"
+    all_succeeded: "전체 {total}개 명령이 성공적으로 실행되었습니다."
+  # 운영 매뉴얼 전용 라벨
+  step_prefix: "단계 {n}"
+  expected_output: "예상 출력"
+  prereq:
+    host_access: "{host}에 대한 SSH 접근 권한 필요"
+    risk_warning: "일부 명령은 높은 권한이 필요합니다 — 실행 전 위험 수준을 확인하세요"
+  # 빈 섹션 플레이스홀더
+  placeholder:
+    overview: "(이 절차의 목적과 배경을 설명하세요)"
+    prerequisites: "(특별한 사전 조건 없음)"
+    verification: "(작업 성공 여부를 확인하는 방법을 설명하세요)"
+    rollback: "(문제 발생 시 복구 절차를 설명하세요)"
+    no_steps: "(기록된 작업 절차가 없습니다)"
+    change_reason: "(이번 변경의 사유를 설명하세요)"
+  # 변경 기록 라벨
+  change:
+    total_operations: "총 작업 수"
+    before: "변경 전"
+    after: "변경 후"
+  saved: "보고서 저장 완료: {path}"
+  list_empty: "저장된 보고서 없음"
+
 # ─── 인벤토리 메시지 ──────────────────────────────────────────────────────────
 inventory:
   empty_config: "호스트 설정 파일이 비어 있거나 형식이 잘못되었습니다: {path}"

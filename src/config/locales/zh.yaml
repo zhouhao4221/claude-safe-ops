@@ -164,6 +164,88 @@ playbook:
   steps: "步骤"
   path: "路径"
 
+# ─── 报告消息 ────────────────────────────────────────────────────────────────
+report:
+  meta:
+    type: "报告类型"
+    created_at: "生成时间"
+    host: "目标主机"
+    severity: "严重等级"
+    operator: "操作人"
+    time_range: "操作时段"
+  type:
+    incident: "故障报告"
+    audit-summary: "审计汇总"
+    health-check: "健康检查"
+    diagnostic: "诊断报告"
+    operation-log: "操作记录"
+    runbook: "操作说明"
+    change-record: "变更记录"
+    custom: "报告"
+  section:
+    summary: "概要"
+    environment: "服务器环境"
+    symptoms: "故障现象"
+    root_cause: "根因分析"
+    impact: "影响评估"
+    remediation: "处置过程"
+    recommendations: "改进建议"
+    reference_data: "参考数据"
+    time_range: "时间范围"
+    command_stats: "命令统计"
+    risk_distribution: "风险分布"
+    high_risk_commands: "高风险命令"
+    top_operators: "操作人排行"
+    system_overview: "系统概况"
+    cpu_memory: "CPU 与内存"
+    disk_usage: "磁盘使用"
+    services: "服务状态"
+    security_checks: "安全检查"
+    investigation: "排查过程"
+    findings: "排查结论"
+    # 过程型文档章节
+    objective: "操作目的"
+    operation_timeline: "操作时间线"
+    result_summary: "执行结果"
+    notes: "备注"
+    overview: "概述"
+    prerequisites: "前置条件"
+    operation_steps: "操作步骤"
+    verification: "验证方法"
+    rollback: "回滚方案"
+    change_reason: "变更原因"
+    change_scope: "变更范围"
+    before_after: "变更前后对比"
+    reason: "原因"
+  # 统计标签
+  stats:
+    total_commands: "执行命令数"
+    succeeded: "成功"
+    failed: "失败"
+    blocked: "拦截"
+    all_succeeded: "全部 {total} 条命令执行成功。"
+  # 操作说明专用标签
+  step_prefix: "步骤 {n}"
+  expected_output: "预期输出"
+  prereq:
+    host_access: "已配置 {host} 的 SSH 访问权限"
+    risk_warning: "部分命令需要较高权限，请确认风险等级后再执行"
+  # 空章节占位文字
+  placeholder:
+    overview: "（请描述本操作的目的和背景）"
+    prerequisites: "（无特殊前置条件）"
+    verification: "（请描述如何验证操作是否成功）"
+    rollback: "（请描述出现问题时的回滚步骤）"
+    no_steps: "（暂无操作步骤记录）"
+    change_reason: "（请描述本次变更的原因）"
+  # 变更记录标签
+  change:
+    total_operations: "操作总数"
+    before: "变更前"
+    after: "变更后"
+  saved: "报告已保存: {path}"
+  list_empty: "暂无已保存的报告"
+
 # ─── 主机清单消息 ─────────────────────────────────────────────────────────────
 inventory:
   empty_config: "主机配置文件为空或格式不正确: {path}"
