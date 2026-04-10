@@ -23,10 +23,11 @@ claude-safe-ops/                              ~/.claude-safe-ops/
 │   ├── risk-check.sh # Risk assessment     │   ├── credentials.yaml   # Credentials (mode 600)
 │   ├── audit-log.sh  # Audit logging       │   └── risk_rules.yaml    # Custom rules (optional)
 │   └── _risk_eval.py # Rule evaluator      ├── audit/
-├── .claude/                                │   └── command_audit.jsonl # Audit log
-│   └── settings.json # Hooks registration  ├── session/
-├── CLAUDE.md         # This file           │   └── current_host.json  # Current session
-└── install.sh        # One-click install   └── logs/
+├── reports/          # Generated reports   │   └── command_audit.jsonl # Audit log
+├── .claude/                                ├── session/
+│   └── settings.json # Hooks registration  │   └── current_host.json  # Current session
+├── CLAUDE.md         # This file           └── logs/
+└── install.sh        # One-click install
 ```
 
 **Rules**:
@@ -101,7 +102,7 @@ src/
 │   ├── system/     network/     disk/        process/
 │   ├── deploy/     backup/      security/    log/
 │   └── playbook/   # Ops playbooks (save/reuse verified ops procedures)
-├── utils/          # Logging (sensitive info filtering), formatted output
+├── utils/          # Logging (sensitive info filtering), formatted output, report generator
 └── config/         # Settings constants, example config templates, built-in playbooks
 ```
 
@@ -190,6 +191,81 @@ Users can save verified ops procedures as YAML playbooks for reuse when the same
 - Proactively suggest existing playbooks when common scenarios are encountered
 
 **Security**: Each step in a playbook still goes through the risk engine; security mechanisms are never bypassed.
+
+## Report Generation
+
+Operations that produce diagnostic results, incident analysis, or audit summaries can be saved as structured Markdown reports to `./reports/` (project directory, gitignored by default).
+
+**File naming**: `{type}-{host}-{YYYYMMDD}-{HHMMSS}.md` (e.g., `incident-web-01-20260410-143022.md`)
+
+### Analysis Reports (结果型)
+
+| Type | Use Case | Default Sections |
+|------|----------|-----------------|
+| `incident` | Post-mortem / fault analysis | Summary, Environment, Symptoms, Root Cause, Impact, Remediation, Recommendations, Reference Data |
+| `audit-summary` | Audit log analysis | Summary, Time Range, Command Stats, Risk Distribution, High-Risk Commands, Top Operators |
+| `health-check` | System health snapshot | Summary, System Overview, CPU & Memory, Disk Usage, Services, Security Checks, Recommendations |
+| `diagnostic` | Troubleshooting record | Summary, Environment, Symptoms, Investigation, Findings, Recommendations |
+
+### Process Documentation (过程型)
+
+When the user asks Claude to document their operation process, write an operation guide, or record what was changed:
+
+| Type | Use Case | Default Sections |
+|------|----------|-----------------|
+| `operation-log` | Record what was done during a session | Summary, Objective, Operation Timeline, Result Summary, Notes |
+| `runbook` | Reusable step-by-step SOP | Overview, Prerequisites, Operation Steps (with commands + expected output), Verification, Rollback Plan |
+| `change-record` | Document what changed and why | Summary, Change Reason, Change Scope, Operation Timeline, Before/After Comparison, Verification |
+| `custom` | Anything else | User-defined |
+
+**When to generate which document**:
+- User says "帮我记录一下刚才的操作过程" → `operation-log` (操作记录)
+- User says "写个操作说明以后可以复用" → `runbook` (操作说明/SOP)
+- User says "帮我写个变更记录" → `change-record` (变更记录)
+- User says "写个故障报告" → `incident` (故障报告)
+
+### Usage
+
+**Python CLI mode** (via `ReportBuilder`):
+```python
+from src.utils.report import ReportBuilder, ReportType
+
+report = (
+    ReportBuilder(ReportType.INCIDENT, title="nginx OOM crash")
+    .meta(host="web-01", severity="P1")
+    .section("故障现象", symptoms_md)
+    .section("根因分析", rca_md)
+    .build()
+)
+path = report.save()
+```
+
+**Process documentation from audit log** (auto-generates from command history):
+```python
+from src.utils.report import generate_operation_log, generate_runbook, generate_change_record
+from src.executor.command_executor import AuditLogger
+
+records = AuditLogger().query(host="web-01", limit=30)
+
+# Operation log — chronological record of what was done
+report = generate_operation_log(records, objective="恢复 diciai 服务")
+
+# Runbook — cleaned-up reusable SOP (only successful commands become steps)
+report = generate_runbook(records, overview="OOM 后恢复 app 进程", rollback="docker restart diciai")
+
+# Change record — what changed, why, before/after
+report = generate_change_record(records, change_reason="OOM 导致全站不可用", before_state="9098 无监听", after_state="HTTP 200")
+
+path = report.save()
+```
+
+**Claude Code mode**: Claude composes the Markdown naturally during investigation, then calls `save_report()` to persist:
+```python
+from src.utils.report import save_report
+path = save_report(content, report_type="operation-log", host="web-01")
+```
+
+**Markdown helpers**: `md_table(headers, rows)` and `md_kv(data)` generate clean Markdown tables (no ANSI escapes) suitable for file output, complementing the terminal-focused `print_table()` / `print_kv()` in `output.py`.
 
 ## Internationalization (i18n)
 

@@ -164,6 +164,88 @@ playbook:
   steps: "Steps"
   path: "Path"
 
+# ─── Report messages ─────────────────────────────────────────────────────────
+report:
+  meta:
+    type: "Report Type"
+    created_at: "Created"
+    host: "Target Host"
+    severity: "Severity"
+    operator: "Operator"
+    time_range: "Time Range"
+  type:
+    incident: "Incident Report"
+    audit-summary: "Audit Summary"
+    health-check: "Health Check"
+    diagnostic: "Diagnostic Report"
+    operation-log: "Operation Log"
+    runbook: "Runbook / SOP"
+    change-record: "Change Record"
+    custom: "Report"
+  section:
+    summary: "Summary"
+    environment: "Server Environment"
+    symptoms: "Symptoms"
+    root_cause: "Root Cause Analysis"
+    impact: "Impact Assessment"
+    remediation: "Remediation Actions"
+    recommendations: "Recommendations"
+    reference_data: "Reference Data"
+    time_range: "Time Range"
+    command_stats: "Command Statistics"
+    risk_distribution: "Risk Distribution"
+    high_risk_commands: "High-Risk Commands"
+    top_operators: "Top Operators"
+    system_overview: "System Overview"
+    cpu_memory: "CPU & Memory"
+    disk_usage: "Disk Usage"
+    services: "Service Status"
+    security_checks: "Security Checks"
+    investigation: "Investigation"
+    findings: "Findings"
+    # Process documentation sections
+    objective: "Objective"
+    operation_timeline: "Operation Timeline"
+    result_summary: "Result Summary"
+    notes: "Notes"
+    overview: "Overview"
+    prerequisites: "Prerequisites"
+    operation_steps: "Operation Steps"
+    verification: "Verification"
+    rollback: "Rollback Plan"
+    change_reason: "Change Reason"
+    change_scope: "Change Scope"
+    before_after: "Before / After Comparison"
+    reason: "Reason"
+  # Statistics labels
+  stats:
+    total_commands: "Total Commands"
+    succeeded: "Succeeded"
+    failed: "Failed"
+    blocked: "Blocked"
+    all_succeeded: "All {total} commands executed successfully."
+  # Runbook-specific labels
+  step_prefix: "Step {n}"
+  expected_output: "Expected output"
+  prereq:
+    host_access: "SSH access to {host}"
+    risk_warning: "Some commands require elevated privileges — confirm risk level before executing"
+  # Placeholder text for empty sections
+  placeholder:
+    overview: "(Describe what this procedure accomplishes)"
+    prerequisites: "(No special prerequisites)"
+    verification: "(Describe how to verify the operation succeeded)"
+    rollback: "(Describe how to revert if something goes wrong)"
+    no_steps: "(No operation steps recorded)"
+    change_reason: "(Describe why this change is needed)"
+  # Change record labels
+  change:
+    total_operations: "Total Operations"
+    before: "Before"
+    after: "After"
+  saved: "Report saved: {path}"
+  list_empty: "No saved reports"
+
 # ─── Inventory messages ───────────────────────────────────────────────────────
 inventory:
   empty_config: "Host config file is empty or malformed: {path}"
